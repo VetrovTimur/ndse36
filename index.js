@@ -1,46 +1,56 @@
+const fs = require('fs');
 const readline = require('readline');
 
-const min = 0;
-const max = 100;
-const secretNumber = Math.floor(Math.random() * (max - min + 1));
+const getRandomNumber = () => Math.floor(Math.random() * 2) + 1;
+
+const logResult = (filename, result) => {
+    fs.appendFile(filename, `${result}\n`, (err) => {
+        if (err) {
+            console.error('Ошибка записи в лог-файл:', err);
+        }
+    });
+};
 
 const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout
 });
 
-const startGame = () => {
-    console.log(`Загадано число в диапазоне от ${min} до ${max}`);
-    askForGuess();
-};
+const playGame = (filename) => {
+    const randomNumber = getRandomNumber();
+    console.log('Загадано число: 1 (Орёл) или 2 (Решка)');
+    
+    rl.question('Угадайте (1 или 2): ', (input) => {
+        const userGuess = parseInt(input, 10);
 
-const askForGuess = () => {
-    rl.question('Введите ваше число: ', (input) => {
-        const guess = parseInt(input, 10);
-
-        if (isNaN(guess)) {
-            console.log('Пожалуйста, введите число.');
-            askForGuess();
+        if (userGuess !== 1 && userGuess !== 2) {
+            console.log('Пожалуйста, введите 1 или 2.');
+            playGame(filename);
             return;
         }
 
-        if (guess < min || guess > max) {
-            console.log(`Число должно быть в диапазоне от ${min} до ${max}.`);
-            askForGuess();
-            return;
-        }
+        const result = userGuess === randomNumber ? 'Вы угадали!' : 'Вы не угадали.';
+        console.log(result);
+        logResult(filename, `Ваш выбор: ${userGuess}, Загаданное число: ${randomNumber}, Результат: ${result}`);
 
-        if (guess < secretNumber) {
-            console.log('Больше');
-            askForGuess();
-        } else if (guess > secretNumber) {
-            console.log('Меньше');
-            askForGuess();
-        } else {
-            console.log(`Отгадано число ${secretNumber}! Поздравляем!`);
-            rl.close();
-        }
+        rl.question('Хотите сыграть еще раз? (да/нет): ', (answer) => {
+            if (answer.toLowerCase() === 'да') {
+                playGame(filename);
+            } else {
+                console.log('Спасибо за игру!');
+                rl.close();
+            }
+        });
     });
 };
 
-startGame();
+
+const filename = process.argv[2];
+
+if (!filename) {
+    console.error('Пожалуйста, укажите имя файла для логирования.');
+    process.exit(1);
+}
+
+
+playGame(filename);
