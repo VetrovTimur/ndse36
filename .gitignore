@@ -1,2 +1,4 @@
 node_modules
 description.js
+analyzer.js
+results.log
